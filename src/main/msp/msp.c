@@ -2930,6 +2930,24 @@ static mspResult_e mspProcessInCommand(mspDescriptor_t srcDesc, int16_t cmdMSP, 
         }
         break;
 
+    case MSP_SET_RAW_MOTORS:
+#if defined(USE_RX_MSP_OVERRIDE)
+        // Only allow setting raw motors when armed and MSP_OVERRIDE mode is active
+        if (ARMING_FLAG(ARMED) && IS_RC_MODE_ACTIVE(BOXMSPOVERRIDE)) {
+            for (int i = 0; i < getMotorCount(); i++) {
+                rawMotorOverride[i] = motorConvertFromExternal(sbufReadU16(src));
+            }
+            rawMotorOverrideActive = true;
+        } else {
+            // If not in the right mode, just consume the data without applying it
+            for (int i = 0; i < getMotorCount(); i++) {
+                sbufReadU16(src);
+            }
+            rawMotorOverrideActive = false;
+        }
+#endif
+        break;
+
     case MSP_SET_SERVO_CONFIGURATION:
 #ifdef USE_SERVOS
         if (dataSize != 1 + 12) {

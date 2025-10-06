@@ -119,6 +119,8 @@ PG_DECLARE(mixerConfig_t, mixerConfig);
 extern const mixer_t mixers[];
 extern float motor[MAX_SUPPORTED_MOTORS];
 extern float motor_disarmed[MAX_SUPPORTED_MOTORS];
+extern float rawMotorOverride[MAX_SUPPORTED_MOTORS];
+extern bool rawMotorOverrideActive;
 struct rxConfig_s;
 
 bool hasServos(void);
@@ -133,6 +135,7 @@ void mixerInit(mixerMode_e mixerMode);
 void mixerInitProfile(void);
 void mixerResetRpmLimiter(void);
 void mixerResetDisarmedMotors(void);
+void mixerResetRawMotorOverride(void);
 void mixTable(timeUs_t currentTimeUs);
 void stopMotors(void);
 void writeMotors(void);

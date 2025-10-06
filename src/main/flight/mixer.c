@@ -77,6 +77,8 @@ static FAST_DATA_ZERO_INIT float motorMixRange;
 
 float FAST_DATA_ZERO_INIT motor[MAX_SUPPORTED_MOTORS];
 float motor_disarmed[MAX_SUPPORTED_MOTORS];
+float rawMotorOverride[MAX_SUPPORTED_MOTORS];
+bool rawMotorOverrideActive = false;
 
 static FAST_DATA_ZERO_INIT int throttleAngleCorrection;
 
@@ -103,6 +105,14 @@ void stopMotors(void)
 {
     writeAllMotors(mixerRuntime.disarmMotorOutput);
     delay(50); // give the timers and ESCs a chance to react.
+}
+
+void mixerResetRawMotorOverride(void)
+{
+    rawMotorOverrideActive = false;
+    for (int i = 0; i < MAX_SUPPORTED_MOTORS; i++) {
+        rawMotorOverride[i] = 0.0f;
+    }
 }
 
 static FAST_DATA_ZERO_INIT float throttle = 0;
@@ -682,6 +692,13 @@ FAST_CODE_NOINLINE void mixTable(timeUs_t currentTimeUs)
     const bool launchControlActive = isLaunchControlActive();
     const bool airmodeEnabled = isAirmodeEnabled() || launchControlActive;
 
+#if defined(USE_RX_MSP_OVERRIDE)
+    // Reset raw motor override if MSP_OVERRIDE mode is not active or not armed
+    if (rawMotorOverrideActive && (!IS_RC_MODE_ACTIVE(BOXMSPOVERRIDE) || !ARMING_FLAG(ARMED))) {
+        mixerResetRawMotorOverride();
+    }
+#endif
+
     // Find min and max throttle based on conditions. Throttle has to be known before mixing
     calculateThrottleAndCurrentMotorEndpoints(currentTimeUs);
 
@@ -839,6 +856,11 @@ FAST_CODE_NOINLINE void mixTable(timeUs_t currentTimeUs)
         && !FLIGHT_MODE(GPS_RESCUE_MODE | ALT_HOLD_MODE | POS_HOLD_MODE)   // disable motor_stop while GPS Rescue / Alt Hold / Pos Hold is active
         && (rcData[THROTTLE] < rxConfig()->mincheck)) {
         applyMotorStop();
+    } else if (rawMotorOverrideActive && IS_RC_MODE_ACTIVE(BOXMSPOVERRIDE) && ARMING_FLAG(ARMED)) {
+        // Apply raw motor override when MSP_OVERRIDE is active
+        for (int i = 0; i < mixerRuntime.motorCount; i++) {
+            motor[i] = rawMotorOverride[i];
+        }
     } else {
         // Apply the mix to motor endpoints
         applyMixToMotors(motorMix, activeMixer);
