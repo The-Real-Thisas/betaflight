@@ -243,6 +243,7 @@
 #define MSP_SELECT_SETTING              210  // in message:  Select setting number (0-2)
 #define MSP_SET_HEADING                 211  // in message:  Define a new heading hold direction
 #define MSP_SET_SERVO_CONFIGURATION     212  // in message:  Servo settings
+#define MSP_SET_RAW_MOTORS              213  // in message:  Raw motor values (bypasses mixer when MSP_OVERRIDE is active)
 #define MSP_SET_MOTOR                   214  // in message:  PropBalance function
 #define MSP_SET_NAV_CONFIG              215  // in message:  Sets nav config parameters
 #define MSP_SET_MOTOR_3D_CONFIG         217  // in message:  Settings needed for reversible ESCs
